@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PJ Billing AI Scanner</title>
+    <title>PJ Billing Smart Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -18,6 +18,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Scanner Line Animation */
         @keyframes scanline {
             0% { top: 0; }
             100% { top: 100%; }
@@ -28,195 +29,180 @@
             height: 4px;
             background: #f39a52;
             box-shadow: 0 0 20px #f39a52;
-            animation: scanline 2.5s infinite linear;
+            animation: scanline 1.5s infinite linear;
             z-index: 20;
         }
 
+        /* Error Shake Animation */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
         }
-        .animate-shake {
-            animation: shake 0.15s ease-in-out infinite;
-        }
+        .animate-shake { animation: shake 0.15s ease-in-out infinite; }
 
+        /* Success Pop Animation */
         @keyframes pop {
             0% { transform: scale(0.5); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .animate-pop {
-            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
+        .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
         .hidden { display: none !important; }
         
+        /* Flashlight Blink Effect */
         .flash-effect {
             position: absolute;
             inset: 0;
             background: white;
             opacity: 0;
             pointer-events: none;
-            z-index: 60;
+            z-index: 100;
             transition: opacity 0.1s;
         }
-        .flash-active { opacity: 0.5; }
+        .flash-active { opacity: 0.8; }
     </style>
 </head>
 <body>
 
     <div id="flash-overlay" class="flash-effect"></div>
 
-    <!-- 1. WELCOME SCREEN -->
+    <!-- 1. STARTING PAGE -->
     <div id="mode-welcome" class="h-screen flex flex-col items-center justify-center p-10 text-center">
-        <div class="w-24 h-24 mb-10 bg-[#f39a52] rounded-[38px] flex items-center justify-center shadow-2xl shadow-orange-500/20">
-            <i data-lucide="scan" class="w-11 h-11 text-black"></i>
+        <div class="w-24 h-24 mb-10 bg-[#f39a52] rounded-[38px] flex items-center justify-center shadow-2xl">
+            <i data-lucide="shield-check" class="w-11 h-11 text-black"></i>
         </div>
-        <h1 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase">PJ <span class="text-orange-400">BILLING</span></h1>
-        <p class="text-gray-500 text-[10px] mb-16 tracking-[0.3em] font-bold uppercase">Deep Security AI Scanner Enabled</p>
+        <h1 class="text-5xl font-black text-white mb-4 tracking-tighter uppercase">PJ <span class="text-orange-400">SMART</span></h1>
+        <p class="text-gray-500 text-[10px] mb-16 tracking-[0.3em] font-bold uppercase italic">Automatic Deep Currency Verification</p>
         <button onclick="changeMode('scanner')" class="w-full py-6 bg-[#f39a52] text-black font-black rounded-full flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl">
-            START SECURITY SCAN <i data-lucide="arrow-right"></i>
+            START SMART SCAN <i data-lucide="arrow-right"></i>
         </button>
     </div>
 
-    <!-- 2. SCANNER SCREEN (Currency) -->
+    <!-- 2. SMART SCANNER PAGE -->
     <div id="mode-scanner" class="h-screen relative flex flex-col hidden">
-        <video id="video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover opacity-60"></video>
-        <canvas id="canvas" class="hidden" width="1280" height="720"></canvas>
+        <video id="video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover opacity-70"></video>
+        <canvas id="canvas" class="hidden" width="640" height="480"></canvas>
 
+        <!-- Live Header for Billing -->
         <div class="relative z-10 p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
-            <div class="bg-white px-6 py-4 rounded-[30px] shadow-2xl">
+            <div class="bg-white px-6 py-4 rounded-[30px] shadow-2xl border-4 border-orange-500/20">
                 <p class="text-[9px] text-gray-400 font-black uppercase tracking-widest">Total Bill</p>
                 <p class="text-3xl font-black text-black">₹<span id="total-amount-display">0</span></p>
             </div>
-            <div class="flex flex-col gap-2">
-                <div class="bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
-                    <span class="text-[10px] text-orange-400 font-bold">N</span>
-                    <span class="text-white font-black text-xs">₹<span id="note-total-display">0</span></span>
-                </div>
-                <div class="bg-white/10 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
-                    <span class="text-[10px] text-orange-400 font-bold">C</span>
-                    <span class="text-white font-black text-xs">₹<span id="coin-total-display">0</span></span>
+            <div class="bg-orange-500/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-orange-500/20 text-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-[10px] text-white font-black uppercase tracking-widest">Active</span>
                 </div>
             </div>
         </div>
 
+        <!-- Scanning Frame -->
         <div class="flex-1 flex items-center justify-center relative">
-            <div id="scanner-frame" class="w-80 h-56 border-2 border-white/10 rounded-[55px] relative transition-all duration-500">
-                <div id="scanner-line" class="hidden animate-scanline"></div>
+            <div id="scanner-frame" class="w-80 h-60 border-2 border-white/20 rounded-[45px] relative transition-all duration-300">
+                <div id="scanner-line" class="animate-scanline"></div>
+                <div class="absolute top-5 left-5 w-8 h-8 border-t-4 border-l-4 border-orange-500 rounded-tl-xl"></div>
+                <div class="absolute top-5 right-5 w-8 h-8 border-t-4 border-r-4 border-orange-500 rounded-tr-xl"></div>
+                <div class="absolute bottom-5 left-5 w-8 h-8 border-b-4 border-l-4 border-orange-500 rounded-bl-xl"></div>
+                <div class="absolute bottom-5 right-5 w-8 h-8 border-b-4 border-r-4 border-orange-500 rounded-br-xl"></div>
             </div>
 
+            <!-- Alerts for User -->
             <div id="alert-container" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div id="alert-fake" class="hidden flex flex-col items-center animate-shake">
                     <div class="w-28 h-28 bg-red-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20">
                         <i data-lucide="shield-alert" class="w-16 h-16 text-white"></i>
                     </div>
-                    <p class="mt-8 bg-red-600 px-8 py-3 rounded-full text-white font-black text-xs uppercase tracking-widest">FAKE CURRENCY</p>
+                    <p class="mt-8 bg-red-600 px-8 py-3 rounded-full text-white font-black text-xs uppercase tracking-widest">INVALID / REVERSE SIDE</p>
                 </div>
                 <div id="alert-success" class="hidden flex flex-col items-center animate-pop">
                     <div class="w-28 h-28 bg-green-500 rounded-full flex items-center justify-center shadow-2xl">
                         <i data-lucide="check" class="w-16 h-16 text-white"></i>
                     </div>
-                    <p class="mt-6 text-green-400 font-black text-xs uppercase tracking-widest">VERIFIED</p>
+                    <p id="success-text" class="mt-6 text-green-400 font-black text-xs uppercase tracking-tighter">ADDED TO BILL</p>
                 </div>
                 <div id="alert-duplicate" class="hidden flex flex-col items-center animate-pop">
                     <div class="w-24 h-24 bg-yellow-500 rounded-full flex items-center justify-center shadow-2xl mb-4">
                         <i data-lucide="alert-circle" class="w-14 h-14 text-white"></i>
                     </div>
-                    <div class="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/50 p-4 rounded-3xl text-yellow-500 font-black text-[10px] uppercase text-center max-w-[200px]">
-                        Already scanned. Try another.
-                    </div>
+                    <p class="mt-4 bg-yellow-500 px-6 py-2 rounded-full text-black font-black text-[10px] uppercase">ALREADY SCANNED</p>
                 </div>
             </div>
         </div>
 
-        <div class="relative z-10 p-10 bg-black/90 rounded-t-[50px] flex flex-col items-center gap-6">
-            <button id="scan-btn" onclick="processCurrency()" class="w-24 h-24 rounded-full bg-white/5 border-[6px] border-orange-500/10 flex items-center justify-center active:scale-90 transition-all">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                    <i id="scan-icon" data-lucide="zap" class="w-8 h-8 text-orange-500"></i>
-                </div>
-            </button>
-            <button onclick="changeMode('summary')" class="w-full py-5 bg-orange-500 text-black font-black rounded-3xl uppercase text-xs tracking-widest">GENERATE FINAL BILL</button>
+        <div class="relative z-10 p-10 bg-black/90 rounded-t-[50px] flex flex-col items-center gap-4">
+            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">Smart Scan: Frame mein Note/Coin laayein</p>
+            <button onclick="changeMode('summary')" class="w-full py-6 bg-orange-500 text-black font-black rounded-3xl uppercase text-lg tracking-widest active:scale-95 transition-all">GENERATE FINAL BILL</button>
         </div>
     </div>
 
-    <!-- 3. SUMMARY SCREEN -->
+    <!-- 3. FINAL SUMMARY PAGE -->
     <div id="mode-summary" class="h-screen bg-black p-10 flex flex-col hidden">
         <div class="flex-1 pt-6 text-center">
-            <i data-lucide="check" class="w-12 h-12 text-green-500 mx-auto mb-6"></i>
-            <h2 class="text-4xl font-black text-white mb-10 tracking-tighter uppercase italic">BILL READY</h2>
-            <div class="bg-white rounded-[40px] p-10 mb-6 text-left shadow-2xl">
-                <p class="text-gray-400 text-[10px] font-black uppercase mb-2">Payable Balance</p>
-                <p class="text-6xl font-black text-black">₹<span id="summary-total">0</span></p>
+            <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <i data-lucide="check" class="w-10 h-10 text-black font-bold"></i>
             </div>
-            <div class="bg-white/5 border border-white/10 rounded-[40px] p-8 text-left space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 text-xs font-bold uppercase">Notes</span>
-                    <span class="text-white font-black">₹<span id="summary-notes">0</span></span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400 text-xs font-bold uppercase">Coins</span>
-                    <span class="text-white font-black">₹<span id="summary-coins">0</span></span>
-                </div>
+            <h2 class="text-4xl font-black text-white mb-10 tracking-tighter uppercase italic">BILL READY</h2>
+            <div class="bg-white rounded-[40px] p-12 mb-10 text-center shadow-2xl">
+                <p class="text-gray-400 text-[10px] font-black uppercase mb-4 tracking-[0.3em]">Payable Amount</p>
+                <p class="text-7xl font-black text-black">₹<span id="summary-total">0</span></p>
             </div>
         </div>
-        <button onclick="changeMode('qr_scan')" class="w-full py-6 bg-white text-black font-black rounded-[30px] flex items-center justify-center gap-4 text-lg active:scale-95 transition-all">
-            <i data-lucide="qr-code"></i> SCAN PJ CARD
+        <button onclick="changeMode('qr_scan')" class="w-full py-6 bg-white text-black font-black rounded-[30px] flex items-center justify-center gap-4 text-lg active:scale-95 transition-all shadow-xl">
+            <i data-lucide="qr-code"></i> VERIFY PJ CARD
         </button>
     </div>
 
-    <!-- 4. QR SCAN SCREEN -->
+    <!-- 4. VERIFICATION PAGE -->
     <div id="mode-qr_scan" class="h-screen bg-black flex flex-col hidden">
         <video id="qr-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover opacity-50"></video>
         <div class="relative z-10 p-10 flex-1 flex flex-col items-center justify-center text-center">
-            <div id="qr-frame" class="w-72 h-72 border-4 border-orange-500 rounded-[60px] relative mb-10 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent"></div>
-                <div id="qr-scan-line" class="hidden animate-scanline"></div>
+            <div id="qr-frame" class="w-72 h-72 border-4 border-orange-500 rounded-[60px] relative mb-10 overflow-hidden shadow-[0_0_50px_rgba(243,154,82,0.2)]">
+                <div id="qr-scan-line" class="animate-scanline"></div>
             </div>
             <h2 class="text-3xl font-black text-white mb-4 uppercase">Verify PJ Card</h2>
-            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold px-10 leading-relaxed">Position your PJ Card QR code for cloud sync.</p>
-            <div id="qr-error-msg" class="hidden mt-8 bg-red-600 px-6 py-4 rounded-3xl animate-shake border border-white/20 max-w-[280px]">
-                <p class="text-white text-[10px] font-black uppercase leading-tight">Invalid QR. Use your Official PJ Card only.</p>
-            </div>
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold">Scanning for Verification...</p>
         </div>
         <div class="relative z-10 p-10 bg-black/90 pb-16">
             <button onclick="processPJCard()" id="qr-verify-btn" class="w-full py-7 bg-orange-500 text-black font-black rounded-full text-xl flex items-center justify-center gap-4 active:scale-95 transition-all">
-                <i data-lucide="shield-check" id="qr-icon"></i> VERIFY CARD
+                <i data-lucide="shield-check" id="qr-icon"></i> VERIFY NOW
             </button>
         </div>
     </div>
 
-    <!-- 5. EMAIL INPUT SCREEN -->
+    <!-- 5. FINAL EMAIL ENTRY -->
     <div id="mode-email_input" class="h-screen bg-black p-12 flex flex-col justify-center text-center hidden">
         <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-[0_0_60px_rgba(74,222,128,0.3)]">
             <i data-lucide="check" class="w-10 h-10 text-black font-black"></i>
         </div>
-        <h2 class="text-4xl font-black text-white mb-4 uppercase tracking-tighter">CARD VERIFIED!</h2>
-        <p class="text-gray-500 text-[10px] mb-12 uppercase tracking-widest font-bold">Link your billing to Chrome PJ page</p>
-        
-        <div class="relative mb-12">
+        <h2 class="text-4xl font-black text-white mb-4 uppercase tracking-tighter">VERIFIED!</h2>
+        <div class="relative mb-12 mt-10">
             <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 text-orange-500"></i>
             <input 
                 id="email-input"
                 type="email" 
-                placeholder="ENTER YOUR REGISTERED EMAIL"
+                placeholder="ENTER REGISTERED EMAIL"
                 oninput="checkEmailValidity()"
                 class="w-full bg-white/5 border border-white/10 rounded-full py-6 pl-16 pr-6 text-white font-black text-sm tracking-widest focus:border-orange-500 outline-none transition-all uppercase"
             />
         </div>
-
         <button 
             id="finalize-btn"
             onclick="finalizeAndRedirect()" 
             disabled
-            class="w-full py-7 bg-[#f39a52] text-black font-black rounded-full text-xl flex items-center justify-center gap-4 opacity-30 disabled:cursor-not-allowed transition-all"
+            class="w-full py-7 bg-orange-500 text-black font-black rounded-full text-xl flex items-center justify-center gap-4 opacity-30 disabled:cursor-not-allowed transition-all"
         >
-            FINALIZE BILL <i data-lucide="external-link"></i>
+            COMPLETE BILL <i data-lucide="external-link"></i>
         </button>
     </div>
 
     <script>
-        let totalAmount = 0, noteTotal = 0, coinTotal = 0, scannedSerials = new Set(), isProcessing = false, videoTrack = null;
+        let totalAmount = 0;
+        let scannedSerials = new Set();
+        let isProcessing = false;
+        let videoTrack = null;
+        let autoScanTimer = null;
         const apiKey = ""; 
 
         lucide.createIcons();
@@ -224,127 +210,159 @@
         function changeMode(modeId) {
             document.querySelectorAll('[id^="mode-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById(`mode-${modeId}`).classList.remove('hidden');
-            if (modeId === 'scanner' || modeId === 'qr_scan') startCamera(modeId === 'qr_scan' ? 'qr-video' : 'video');
-            else stopCamera();
+            
+            if (modeId === 'scanner') {
+                startCamera('video').then(() => startAutoScanLoop());
+            } else if (modeId === 'qr_scan') {
+                startCamera('qr-video');
+            } else {
+                stopCamera();
+                if(autoScanTimer) clearInterval(autoScanTimer);
+            }
 
             if (modeId === 'summary') {
                 document.getElementById('summary-total').innerText = totalAmount;
-                document.getElementById('summary-notes').innerText = noteTotal;
-                document.getElementById('summary-coins').innerText = coinTotal;
             }
         }
 
         async function startCamera(videoId) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment', width: { ideal: 1280 } } 
+                    video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } 
                 });
                 document.getElementById(videoId).srcObject = stream;
                 videoTrack = stream.getVideoTracks()[0];
-            } catch (err) {}
-        }
-
-        function stopCamera() { if (videoTrack) { videoTrack.stop(); videoTrack = null; } }
-
-        async function triggerFlash(times, duration) {
-            if(!videoTrack) return;
-            const overlay = document.getElementById('flash-overlay');
-            const interval = duration / (times * 2);
-            for(let i=0; i<times; i++) {
-                overlay.classList.add('flash-active');
-                try { await videoTrack.applyConstraints({ advanced: [{ torch: true }] }); } catch(e){}
-                await new Promise(r => setTimeout(r, interval));
-                overlay.classList.remove('flash-active');
-                try { await videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){}
-                await new Promise(r => setTimeout(r, interval));
+            } catch (err) {
+                console.error("Access denied");
             }
         }
 
-        async function processCurrency() {
-            if (isProcessing) return;
+        function stopCamera() { 
+            if (videoTrack) { 
+                videoTrack.stop(); 
+                videoTrack = null; 
+            } 
+        }
+
+        // Loop for automatic detection
+        function startAutoScanLoop() {
+            if(autoScanTimer) clearInterval(autoScanTimer);
+            autoScanTimer = setInterval(() => {
+                const scannerVisible = !document.getElementById('mode-scanner').classList.contains('hidden');
+                if(!isProcessing && scannerVisible) {
+                    smartAutoScan();
+                }
+            }, 1200); 
+        }
+
+        async function triggerFlashBlink() {
+            if(!videoTrack) return;
+            const overlay = document.getElementById('flash-overlay');
+            for(let i=0; i<2; i++) {
+                overlay.classList.add('flash-active');
+                try { await videoTrack.applyConstraints({ advanced: [{ torch: true }] }); } catch(e){}
+                await new Promise(r => setTimeout(r, 100));
+                overlay.classList.remove('flash-active');
+                try { await videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){}
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
+        async function smartAutoScan() {
+            const video = document.getElementById('video');
+            if(!video || video.readyState !== 4) return;
+
             isProcessing = true;
-            
-            const btn = document.getElementById('scan-btn'), icon = document.getElementById('scan-icon'), 
-                  line = document.getElementById('scanner-line'), frame = document.getElementById('scanner-frame');
-
-            line.classList.remove('hidden');
-            frame.classList.add('border-orange-500', 'scale-105');
-            icon.setAttribute('data-lucide', 'loader-2');
-            icon.classList.add('animate-spin');
-            lucide.createIcons();
-
-            const canvas = document.getElementById('canvas'), video = document.getElementById('video'), ctx = canvas.getContext('2d');
+            const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-
-            await triggerFlash(5, 2000);
+            const base64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
             try {
+                // Smart prompt for deep verification (No AI mentions)
+                const prompt = `
+                    Examine image for Indian Note or Coin.
+                    Extract: 1. type (note/coin) 2. value (number) 3. serial (for notes) 4. side (front/back).
+                    Verification: Must be authentic Indian currency.
+                    Return JSON: {"type": "note"|"coin", "value": number, "serial": "string", "isValid": boolean, "isFront": boolean}
+                `;
+
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Strict AI Currency Check. Check authenticity. JSON: {'type':'note'|'coin'|'invalid', 'value':number, 'serial':'string', 'isValid':boolean}" }, { inlineData: { mimeType: "image/jpeg", data: base64Image } }] }],
+                        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64Image } }] }],
                         generationConfig: { responseMimeType: "application/json" }
                     })
                 });
+
                 const data = await response.json();
                 const result = JSON.parse(data.candidates[0].content.parts[0].text);
                 
-                if (!result.isValid) { showAlert('alert-fake'); }
-                else if (result.type === 'note') {
-                    if (scannedSerials.has(result.serial)) { showAlert('alert-duplicate'); }
-                    else {
-                        scannedSerials.add(result.serial);
-                        noteTotal += result.value; totalAmount += result.value;
-                        updateDisplays(); showAlert('alert-success');
+                if (result.isValid) {
+                    if (result.type === 'note' && result.isFront) {
+                        if (scannedSerials.has(result.serial)) { 
+                            showAlert('alert-duplicate'); 
+                        } else {
+                            await triggerFlashBlink();
+                            scannedSerials.add(result.serial);
+                            totalAmount += result.value;
+                            updateTotalUI();
+                            showAlert('alert-success', `₹${result.value} Note added`);
+                        }
+                    } else if (result.type === 'coin') {
+                        // Rapid coin adding logic
+                        await triggerFlashBlink();
+                        totalAmount += result.value;
+                        updateTotalUI();
+                        showAlert('alert-success', `₹${result.value} Coin added`);
+                    } else {
+                        showAlert('alert-fake');
                     }
-                } else if (result.type === 'coin') {
-                    coinTotal += result.value; totalAmount += result.value;
-                    updateDisplays(); showAlert('alert-success');
                 }
-            } catch (err) {} finally {
-                isProcessing = false;
-                line.classList.add('hidden'); frame.classList.remove('border-orange-500', 'scale-105');
-                icon.setAttribute('data-lucide', 'zap'); icon.classList.remove('animate-spin');
-                lucide.createIcons();
+            } catch (err) {
+                // Silent fail for next retry
+            } finally {
+                setTimeout(() => { isProcessing = false; }, 1000);
             }
         }
 
-        function showAlert(id) {
-            const el = document.getElementById(id); el.classList.remove('hidden');
-            setTimeout(() => el.classList.add('hidden'), 2500);
+        function updateTotalUI() {
+            document.getElementById('total-amount-display').innerText = totalAmount;
         }
 
-        function updateDisplays() {
-            document.getElementById('total-amount-display').innerText = totalAmount;
-            document.getElementById('note-total-display').innerText = noteTotal;
-            document.getElementById('coin-total-display').innerText = coinTotal;
+        function showAlert(id, customText = null) {
+            const el = document.getElementById(id);
+            if (customText && id === 'alert-success') {
+                document.getElementById('success-text').innerText = customText.toUpperCase();
+            }
+            el.classList.remove('hidden');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 1800);
         }
 
         async function processPJCard() {
             if (isProcessing) return;
             isProcessing = true;
-            const line = document.getElementById('qr-scan-line'), icon = document.getElementById('qr-icon');
-            line.classList.remove('hidden');
+            const icon = document.getElementById('qr-icon');
             icon.setAttribute('data-lucide', 'loader-2'); icon.classList.add('animate-spin'); lucide.createIcons();
 
             const canvas = document.getElementById('canvas'), video = document.getElementById('qr-video'), ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const img = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+            const img = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Is this a valid PJ CARD? Link must include 'pjcompanyofficial.github.io/PJ.COM/'. JSON: {'isPJ':boolean}" }, { inlineData: { mimeType: "image/jpeg", data: img } }] }],
+                        contents: [{ parts: [{ text: "Verify authentication code. Return JSON: {'isPJ':boolean}" }, { inlineData: { mimeType: "image/jpeg", data: img } }] }],
                         generationConfig: { responseMimeType: "application/json" }
                     })
                 });
                 const d = await res.json();
                 if (JSON.parse(d.candidates[0].content.parts[0].text).isPJ) changeMode('email_input');
-                else document.getElementById('qr-error-msg').classList.remove('hidden');
             } catch (e) {} finally {
-                isProcessing = false; line.classList.add('hidden');
+                isProcessing = false;
                 icon.setAttribute('data-lucide', 'shield-check'); icon.classList.remove('animate-spin'); lucide.createIcons();
             }
         }
@@ -360,8 +378,7 @@
 
         function finalizeAndRedirect() {
             const email = document.getElementById('email-input').value;
-            // Chrome PJ page link with parameters for automatic continuation
-            const finalUrl = `https://pjcompanyofficial.github.io/PJ.COM/?balance=${totalAmount}&user=${encodeURIComponent(email)}&status=verified&source=scanner_pro`;
+            const finalUrl = `https://pjcompanyofficial.github.io/PJ.COM/?balance=${totalAmount}&user=${encodeURIComponent(email)}&status=verified&scan=smart`;
             window.location.href = finalUrl;
         }
     </script>
