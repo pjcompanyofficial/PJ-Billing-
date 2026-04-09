@@ -1,9 +1,8 @@
-©PJ 2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PJ Billing AI Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -16,6 +15,7 @@
             color: white;
             margin: 0;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         @keyframes scanline {
@@ -58,8 +58,9 @@
             opacity: 0;
             pointer-events: none;
             z-index: 60;
+            transition: opacity 0.1s;
         }
-        .flash-active { opacity: 0.3; }
+        .flash-active { opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -105,29 +106,25 @@
                 <div id="scanner-line" class="hidden animate-scanline"></div>
             </div>
 
-            <!-- Alerts Container -->
             <div id="alert-container" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <!-- Fake Alert -->
                 <div id="alert-fake" class="hidden flex flex-col items-center animate-shake">
                     <div class="w-28 h-28 bg-red-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20">
                         <i data-lucide="shield-alert" class="w-16 h-16 text-white"></i>
                     </div>
                     <p class="mt-8 bg-red-600 px-8 py-3 rounded-full text-white font-black text-xs uppercase tracking-widest">FAKE CURRENCY</p>
                 </div>
-                <!-- Success Alert -->
                 <div id="alert-success" class="hidden flex flex-col items-center animate-pop">
                     <div class="w-28 h-28 bg-green-500 rounded-full flex items-center justify-center shadow-2xl">
                         <i data-lucide="check" class="w-16 h-16 text-white"></i>
                     </div>
                     <p class="mt-6 text-green-400 font-black text-xs uppercase tracking-widest">VERIFIED</p>
                 </div>
-                <!-- Duplicate Alert -->
                 <div id="alert-duplicate" class="hidden flex flex-col items-center animate-pop">
                     <div class="w-24 h-24 bg-yellow-500 rounded-full flex items-center justify-center shadow-2xl mb-4">
                         <i data-lucide="alert-circle" class="w-14 h-14 text-white"></i>
                     </div>
                     <div class="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/50 p-4 rounded-3xl text-yellow-500 font-black text-[10px] uppercase text-center max-w-[200px]">
-                        Duplicate note detected. Please show another.
+                        Already scanned. Try another.
                     </div>
                 </div>
             </div>
@@ -147,18 +144,18 @@
     <div id="mode-summary" class="h-screen bg-black p-10 flex flex-col hidden">
         <div class="flex-1 pt-6 text-center">
             <i data-lucide="check" class="w-12 h-12 text-green-500 mx-auto mb-6"></i>
-            <h2 class="text-4xl font-black text-white mb-10 tracking-tighter">BILL SUMMARY</h2>
+            <h2 class="text-4xl font-black text-white mb-10 tracking-tighter uppercase italic">BILL READY</h2>
             <div class="bg-white rounded-[40px] p-10 mb-6 text-left shadow-2xl">
                 <p class="text-gray-400 text-[10px] font-black uppercase mb-2">Payable Balance</p>
                 <p class="text-6xl font-black text-black">₹<span id="summary-total">0</span></p>
             </div>
             <div class="bg-white/5 border border-white/10 rounded-[40px] p-8 text-left space-y-4">
                 <div class="flex justify-between items-center">
-                    <span class="text-gray-400 text-xs font-bold uppercase">Total Notes</span>
+                    <span class="text-gray-400 text-xs font-bold uppercase">Notes</span>
                     <span class="text-white font-black">₹<span id="summary-notes">0</span></span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-gray-400 text-xs font-bold uppercase">Total Coins</span>
+                    <span class="text-gray-400 text-xs font-bold uppercase">Coins</span>
                     <span class="text-white font-black">₹<span id="summary-coins">0</span></span>
                 </div>
             </div>
@@ -176,11 +173,10 @@
                 <div class="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent"></div>
                 <div id="qr-scan-line" class="hidden animate-scanline"></div>
             </div>
-            <h2 class="text-3xl font-black text-white mb-4">SCAN PJ CARD QR</h2>
-            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold px-10 leading-relaxed">Position your PJ Card QR code within the frame for real-time verification.</p>
-            
+            <h2 class="text-3xl font-black text-white mb-4 uppercase">Verify PJ Card</h2>
+            <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold px-10 leading-relaxed">Position your PJ Card QR code for cloud sync.</p>
             <div id="qr-error-msg" class="hidden mt-8 bg-red-600 px-6 py-4 rounded-3xl animate-shake border border-white/20 max-w-[280px]">
-                <p class="text-white text-[10px] font-black uppercase leading-tight">Invalid QR code, this is not PJ QR code please show your PJ card QR code</p>
+                <p class="text-white text-[10px] font-black uppercase leading-tight">Invalid QR. Use your Official PJ Card only.</p>
             </div>
         </div>
         <div class="relative z-10 p-10 bg-black/90 pb-16">
@@ -196,16 +192,16 @@
             <i data-lucide="check" class="w-10 h-10 text-black font-black"></i>
         </div>
         <h2 class="text-4xl font-black text-white mb-4 uppercase tracking-tighter">CARD VERIFIED!</h2>
-        <p class="text-gray-500 text-[10px] mb-12 uppercase tracking-widest font-bold">Enter the email linked to your Chrome page</p>
+        <p class="text-gray-500 text-[10px] mb-12 uppercase tracking-widest font-bold">Link your billing to Chrome PJ page</p>
         
         <div class="relative mb-12">
             <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 text-orange-500"></i>
             <input 
                 id="email-input"
                 type="email" 
-                placeholder="ENTER YOUR EMAIL"
+                placeholder="ENTER YOUR REGISTERED EMAIL"
                 oninput="checkEmailValidity()"
-                class="w-full bg-white/5 border border-white/10 rounded-full py-6 pl-16 pr-6 text-white font-black text-sm tracking-widest focus:border-orange-500 outline-none transition-all"
+                class="w-full bg-white/5 border border-white/10 rounded-full py-6 pl-16 pr-6 text-white font-black text-sm tracking-widest focus:border-orange-500 outline-none transition-all uppercase"
             />
         </div>
 
@@ -213,37 +209,23 @@
             id="finalize-btn"
             onclick="finalizeAndRedirect()" 
             disabled
-            class="w-full py-7 bg-[#f39a52] text-black font-black rounded-full text-xl flex items-center justify-center gap-4 opacity-30 disabled:cursor-not-allowed"
+            class="w-full py-7 bg-[#f39a52] text-black font-black rounded-full text-xl flex items-center justify-center gap-4 opacity-30 disabled:cursor-not-allowed transition-all"
         >
-            FINALIZE BILL <i data-lucide="arrow-up-right"></i>
+            FINALIZE BILL <i data-lucide="external-link"></i>
         </button>
     </div>
 
     <script>
-        // APP STATE
-        let totalAmount = 0;
-        let noteTotal = 0;
-        let coinTotal = 0;
-        let noteCount = 0;
-        let coinCount = 0;
-        let scannedSerials = new Set();
-        let isProcessing = false;
-        let videoTrack = null;
-        const apiKey = ""; // Runtime key
+        let totalAmount = 0, noteTotal = 0, coinTotal = 0, scannedSerials = new Set(), isProcessing = false, videoTrack = null;
+        const apiKey = ""; 
 
-        // Initialize Icons
         lucide.createIcons();
 
-        // Mode Navigation
         function changeMode(modeId) {
             document.querySelectorAll('[id^="mode-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById(`mode-${modeId}`).classList.remove('hidden');
-            
-            if (modeId === 'scanner' || modeId === 'qr_scan') {
-                startCamera(modeId === 'qr_scan' ? 'qr-video' : 'video');
-            } else {
-                stopCamera();
-            }
+            if (modeId === 'scanner' || modeId === 'qr_scan') startCamera(modeId === 'qr_scan' ? 'qr-video' : 'video');
+            else stopCamera();
 
             if (modeId === 'summary') {
                 document.getElementById('summary-total').innerText = totalAmount;
@@ -255,45 +237,35 @@
         async function startCamera(videoId) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+                    video: { facingMode: 'environment', width: { ideal: 1280 } } 
                 });
-                const videoEl = document.getElementById(videoId);
-                videoEl.srcObject = stream;
+                document.getElementById(videoId).srcObject = stream;
                 videoTrack = stream.getVideoTracks()[0];
-            } catch (err) {
-                console.error("Camera Error:", err);
-            }
+            } catch (err) {}
         }
 
-        function stopCamera() {
-            if (videoTrack) {
-                videoTrack.stop();
-                videoTrack = null;
-            }
-        }
+        function stopCamera() { if (videoTrack) { videoTrack.stop(); videoTrack = null; } }
 
         async function triggerFlash(times, duration) {
+            if(!videoTrack) return;
             const overlay = document.getElementById('flash-overlay');
             const interval = duration / (times * 2);
             for(let i=0; i<times; i++) {
                 overlay.classList.add('flash-active');
-                if(videoTrack) try { await videoTrack.applyConstraints({ advanced: [{ torch: true }] }); } catch(e){}
+                try { await videoTrack.applyConstraints({ advanced: [{ torch: true }] }); } catch(e){}
                 await new Promise(r => setTimeout(r, interval));
                 overlay.classList.remove('flash-active');
-                if(videoTrack) try { await videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){}
+                try { await videoTrack.applyConstraints({ advanced: [{ torch: false }] }); } catch(e){}
                 await new Promise(r => setTimeout(r, interval));
             }
         }
 
-        // AI Currency Scan
         async function processCurrency() {
             if (isProcessing) return;
             isProcessing = true;
             
-            const btn = document.getElementById('scan-btn');
-            const icon = document.getElementById('scan-icon');
-            const line = document.getElementById('scanner-line');
-            const frame = document.getElementById('scanner-frame');
+            const btn = document.getElementById('scan-btn'), icon = document.getElementById('scan-icon'), 
+                  line = document.getElementById('scanner-line'), frame = document.getElementById('scanner-frame');
 
             line.classList.remove('hidden');
             frame.classList.add('border-orange-500', 'scale-105');
@@ -301,68 +273,46 @@
             icon.classList.add('animate-spin');
             lucide.createIcons();
 
-            const canvas = document.getElementById('canvas');
-            const video = document.getElementById('video');
-            const ctx = canvas.getContext('2d');
+            const canvas = document.getElementById('canvas'), video = document.getElementById('video'), ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
-            triggerFlash(5, 2000);
-
-            const prompt = `Strict deep security analysis of Indian Currency. 
-            Check: Gandhi Dots, RBI Text, Security Thread, Signature.
-            JSON: {"type": "note"|"coin"|"invalid", "value": number, "serial": "string", "isValid": boolean, "securityPassed": boolean, "isFake": boolean}`;
+            await triggerFlash(5, 2000);
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64Image } }] }],
+                        contents: [{ parts: [{ text: "Strict AI Currency Check. Check authenticity. JSON: {'type':'note'|'coin'|'invalid', 'value':number, 'serial':'string', 'isValid':boolean}" }, { inlineData: { mimeType: "image/jpeg", data: base64Image } }] }],
                         generationConfig: { responseMimeType: "application/json" }
                     })
                 });
-
                 const data = await response.json();
                 const result = JSON.parse(data.candidates[0].content.parts[0].text);
                 
-                await new Promise(r => setTimeout(r, 1000));
-
-                if (result.isFake || !result.isValid) {
-                    showAlert('alert-fake');
-                } else if (result.type === 'note') {
-                    if (scannedSerials.has(result.serial)) {
-                        showAlert('alert-duplicate');
-                    } else {
+                if (!result.isValid) { showAlert('alert-fake'); }
+                else if (result.type === 'note') {
+                    if (scannedSerials.has(result.serial)) { showAlert('alert-duplicate'); }
+                    else {
                         scannedSerials.add(result.serial);
-                        noteTotal += result.value;
-                        totalAmount += result.value;
-                        updateDisplays();
-                        showAlert('alert-success');
+                        noteTotal += result.value; totalAmount += result.value;
+                        updateDisplays(); showAlert('alert-success');
                     }
                 } else if (result.type === 'coin') {
-                    coinTotal += result.value;
-                    totalAmount += result.value;
-                    updateDisplays();
-                    showAlert('alert-success');
+                    coinTotal += result.value; totalAmount += result.value;
+                    updateDisplays(); showAlert('alert-success');
                 }
-
-            } catch (err) {
-                console.error(err);
-            } finally {
+            } catch (err) {} finally {
                 isProcessing = false;
-                line.classList.add('hidden');
-                frame.classList.remove('border-orange-500', 'scale-105');
-                icon.setAttribute('data-lucide', 'zap');
-                icon.classList.remove('animate-spin');
+                line.classList.add('hidden'); frame.classList.remove('border-orange-500', 'scale-105');
+                icon.setAttribute('data-lucide', 'zap'); icon.classList.remove('animate-spin');
                 lucide.createIcons();
             }
         }
 
         function showAlert(id) {
-            const el = document.getElementById(id);
-            el.classList.remove('hidden');
-            setTimeout(() => el.classList.add('hidden'), 3000);
+            const el = document.getElementById(id); el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 2500);
         }
 
         function updateDisplays() {
@@ -371,76 +321,47 @@
             document.getElementById('coin-total-display').innerText = coinTotal;
         }
 
-        // PJ Card Logic
         async function processPJCard() {
             if (isProcessing) return;
             isProcessing = true;
-            
-            const btn = document.getElementById('qr-verify-btn');
-            const icon = document.getElementById('qr-icon');
-            const line = document.getElementById('qr-scan-line');
-            const error = document.getElementById('qr-error-msg');
-
-            error.classList.add('hidden');
+            const line = document.getElementById('qr-scan-line'), icon = document.getElementById('qr-icon');
             line.classList.remove('hidden');
-            icon.setAttribute('data-lucide', 'loader-2');
-            icon.classList.add('animate-spin');
-            lucide.createIcons();
+            icon.setAttribute('data-lucide', 'loader-2'); icon.classList.add('animate-spin'); lucide.createIcons();
 
-            const canvas = document.getElementById('canvas');
-            const video = document.getElementById('qr-video');
-            const ctx = canvas.getContext('2d');
+            const canvas = document.getElementById('canvas'), video = document.getElementById('qr-video'), ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-
-            const prompt = `Verify if this is a valid PJ CARD QR code. 
-            Link must contain: "pjcompanyofficial.github.io/PJ.COM/".
-            JSON: {"isPJCard": boolean, "linkDetected": string}`;
+            const img = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64Image } }] }],
+                        contents: [{ parts: [{ text: "Is this a valid PJ CARD? Link must include 'pjcompanyofficial.github.io/PJ.COM/'. JSON: {'isPJ':boolean}" }, { inlineData: { mimeType: "image/jpeg", data: img } }] }],
                         generationConfig: { responseMimeType: "application/json" }
                     })
                 });
-
-                const data = await response.json();
-                const result = JSON.parse(data.candidates[0].content.parts[0].text);
-
-                if (result.isPJCard) {
-                    changeMode('email_input');
-                } else {
-                    error.classList.remove('hidden');
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                isProcessing = false;
-                line.classList.add('hidden');
-                icon.setAttribute('data-lucide', 'shield-check');
-                icon.classList.remove('animate-spin');
-                lucide.createIcons();
+                const d = await res.json();
+                if (JSON.parse(d.candidates[0].content.parts[0].text).isPJ) changeMode('email_input');
+                else document.getElementById('qr-error-msg').classList.remove('hidden');
+            } catch (e) {} finally {
+                isProcessing = false; line.classList.add('hidden');
+                icon.setAttribute('data-lucide', 'shield-check'); icon.classList.remove('animate-spin'); lucide.createIcons();
             }
         }
 
         function checkEmailValidity() {
-            const email = document.getElementById('email-input').value;
-            const btn = document.getElementById('finalize-btn');
-            if (email.includes('@') && email.length > 5) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-30');
+            const val = document.getElementById('email-input').value, btn = document.getElementById('finalize-btn');
+            if (val.includes('@') && val.length > 5) {
+                btn.disabled = false; btn.classList.remove('opacity-30');
             } else {
-                btn.disabled = true;
-                btn.classList.add('opacity-30');
+                btn.disabled = true; btn.classList.add('opacity-30');
             }
         }
 
         function finalizeAndRedirect() {
             const email = document.getElementById('email-input').value;
-            const finalUrl = `https://pjcompanyofficial.github.io/PJ.COM/?balance=${totalAmount}&user=${encodeURIComponent(email)}&status=verified`;
+            // Chrome PJ page link with parameters for automatic continuation
+            const finalUrl = `https://pjcompanyofficial.github.io/PJ.COM/?balance=${totalAmount}&user=${encodeURIComponent(email)}&status=verified&source=scanner_pro`;
             window.location.href = finalUrl;
         }
     </script>
